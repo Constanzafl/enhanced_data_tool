@@ -1,0 +1,18 @@
+# Entornos virtuales
+venv/
+entorno/
+env/
+
+# Cachés de Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Archivos temporales o confidenciales
+.env
+*.log
+*.tmp
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
