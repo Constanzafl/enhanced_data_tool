@@ -33,6 +33,7 @@ venv_data_tool\Scripts\activate     # Windows
 pip install -r requirements.txt
 
 # 3. Instalar embeddings (opcional pero recomendado)
+python -m pip install --upgrade pip
 pip install sentence-transformers scikit-learn
 
 # 4. Configurar Ollama para LLM (opcional)
