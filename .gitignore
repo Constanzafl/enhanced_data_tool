@@ -2,6 +2,7 @@
 venv/
 entorno/
 env/
+venv_data_tool/
 
 # Cachés de Python
 __pycache__/
