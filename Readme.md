@@ -35,11 +35,16 @@ pip install -r requirements.txt
 # 3. Instalar embeddings (opcional pero recomendado)
 python -m pip install --upgrade pip
 pip install sentence-transformers scikit-learn
+pip install ollama 
 
 # 4. Configurar Ollama para LLM (opcional)
 # Instalar desde: https://ollama.ai
 ollama serve
 ollama pull llama3.2:3b
+```
+# demo
+```bash
+python practical_demo.py
 ```
 
 ## 🎯 Uso Rápido
