@@ -1,0 +1,16 @@
+treatment_id,appointment_reference,medicine,dosage,duration_days,cost
+1,23,Medicine_1,2 pills,4,75
+2,7,Medicine_2,3 pills,5,100
+3,1,Medicine_3,4 pills,6,125
+4,6,Medicine_4,5 pills,7,150
+5,17,Medicine_5,1 pills,8,175
+6,1,Medicine_6,2 pills,9,200
+7,9,Medicine_7,3 pills,10,225
+8,3,Medicine_8,4 pills,11,250
+9,13,Medicine_9,5 pills,12,275
+10,23,Medicine_10,1 pills,3,300
+11,21,Medicine_11,2 pills,4,325
+12,19,Medicine_12,3 pills,5,350
+13,13,Medicine_13,4 pills,6,375
+14,20,Medicine_14,5 pills,7,400
+15,9,Medicine_15,1 pills,8,425

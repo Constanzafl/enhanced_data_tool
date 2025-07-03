@@ -1,0 +1,11 @@
+medication_id,name,category,price,stock
+1,Drug_01,Painkiller,25,95
+2,Drug_02,Antibiotic,40,90
+3,Drug_03,Painkiller,55,85
+4,Drug_04,Antibiotic,70,80
+5,Drug_05,Painkiller,85,75
+6,Drug_06,Antibiotic,100,70
+7,Drug_07,Painkiller,115,65
+8,Drug_08,Antibiotic,130,60
+9,Drug_09,Painkiller,145,55
+10,Drug_10,Antibiotic,160,50

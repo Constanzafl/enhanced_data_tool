@@ -1,455 +1,1995 @@
-# 🚀 Enhanced Data Tool v2.0
+# 🔍 Smart Database Relationship Analyzer
 
-**Herramienta avanzada para detectar relaciones automáticamente en bases de datos usando IA, embeddings semánticos y LLMs locales**
+Analizador inteligente de relaciones en bases de datos que combina análisis semántico, comparación de valores y validación con AI.
 
-## ✨ Características Principales
+## 🚀 Características Principales
 
-- 🔍 **Detección Automática de Relaciones**: Identifica Foreign Keys potenciales sin documentación previa
-- 🧠 **IA Semántica**: Usa embeddings para encontrar relaciones por similitud conceptual
-- 🤖 **Verificación LLM**: Valida relaciones usando modelos de lenguaje locales (Ollama)
-- 📐 **Exportación DBML**: Genera diagramas ER visuales automáticamente
-- 🎯 **Multi-estrategia**: Combina análisis de nombres, patrones, datos y semántica
-- 🔒 **Privacidad**: Todo ejecuta localmente, sin enviar datos a APIs externas
+### 1. **Detección Inteligente de Relaciones**
+- **Análisis semántico avanzado**: Detecta relaciones incluso con nombres no estándar
+  - `pets.OwnerPatientCode` → `patients.PatientUID`
+  - `appointments.pacienteIdentificador` → `patients.uid`
+  - `prescriptions.MedicationCode` → `medications.MedicationUUID`
+- **Detección de PKs flexible**: Identifica claves primarias con diversos nombres:
+  - Estándar: `id`, `uid`, `uuid`, `guid`, `pk`
+  - Compuestos: `PatientUID`, `AnimalIdentifier`, `CitaID`
+  - CamelCase: `PatientIdentifier`, `BookingReference`
+  - Otros idiomas: `identificador`, `codigo`, `numero`
+- **Evita falsos positivos**: NO confunde PKs entre tablas
+- **Comparación de valores**: Calcula el porcentaje de valores coincidentes
+- **Descomposición inteligente de nombres**: Separa CamelCase, snake_case, etc.
 
-## 🚀 Instalación Rápida
+### 2. **Sistema Anti-Confusión de PKs** 🔑
+El sistema implementa reglas específicas para evitar errores comunes:
 
-### Opción 1: Instalación Automática (Recomendada)
-
-```bash
-# Descargar e instalar automáticamente
-python setup_tool.py
+```
+❌ INCORRECTO: pets.uid → patients.uid (ambas son PKs)
+✅ CORRECTO: pets.PatientIdentifier → patients.uid (FK → PK)
+✅ CORRECTO: appointments.pacienteIdentificador → patients.PatientUID
 ```
 
-### Opción 2: Instalación Manual
+**Reglas implementadas:**
+- Las PKs de diferentes tablas NO se relacionan entre sí
+- Penalización de -50% al score si ambas columnas son PKs
+- Bonus de +20% para patrones FK clásicos detectados semánticamente
+- Análisis profundo de componentes del nombre
 
-```bash
-# 1. Crear entorno virtual
-python -m venv venv_data_tool
-source venv_data_tool/bin/activate  # Linux/Mac
-# o
-venv_data_tool\Scripts\activate     # Windows
-
-# 2. Instalar dependencias básicas
-pip install -r requirements.txt
-
-# 3. Instalar embeddings (opcional pero recomendado)
-python -m pip install --upgrade pip
-pip install sentence-transformers scikit-learn
-pip install ollama 
-
-# 4. Configurar Ollama para LLM (opcional)
-# Instalar desde: https://ollama.ai
-ollama serve
-ollama pull llama3.2:3b
-```
-# demo
-```bash
-python practical_demo.py
-```
-
-## 🎯 Uso Rápido
-
-### Ejecución Simple
+### 3. **Manejo de Nombres Complejos**
+El sistema descompone nombres complejos para encontrar relaciones:
 
 ```python
-from complete_data_tool import analyze_database_complete
-
-# Análisis completo de una base de datos
-results = analyze_database_complete(
-    db_path="mi_database.db",
-    output_dir="./output",
-    use_embeddings=True,  # Detección semántica
-    use_llm=True         # Verificación con IA
-)
+'OwnerPatientCode' → ['owner', 'patient', 'code']
+'pacienteIdentificador' → ['paciente', 'identificador']
+'MedicationUUID' → ['medication', 'uuid']
 ```
 
-### Uso Avanzado
+Detecta relaciones incluso cuando:
+- Los nombres usan diferentes idiomas
+- Mezclan CamelCase, snake_case, PascalCase
+- Usan abreviaciones o términos técnicos
+- No siguen convenciones estándar
+
+## 📋 Requisitos
+
+```bash
+pip install pandas numpy requests
+```
+
+Para la validación con AI:
+```bash
+# Instalar Ollama
+curl https://ollama.ai/install.sh | sh
+
+# Descargar un modelo
+ollama pull llama2
+```
+
+## 🛠️ Uso Básico
+
+### 1. Preparar tus datos
+
+Coloca tus archivos CSV en el mismo directorio:
+- `patients.csv`
+- `appointments.csv`
+- `medications.csv`
+- etc.
+
+### 2. Ejecutar el análisis
 
 ```python
-from complete_data_tool import CompleteDataTool
-
-# Configuración personalizada
-tool = CompleteDataTool(
-    db_path="mi_database.db",
-    use_embeddings=True,
-    use_llm=True
-)
-
-# Análisis paso a paso
-schema = tool.extract_schema()
-relationships = tool.detect_relationships()
-llm_results = tool.verify_with_llm(max_verifications=10)
-dbml_content = tool.generate_dbml("mi_esquema.dbml")
+python main_analyzer.py
 ```
 
-## 🔧 Configuración
+### 3. Usar programáticamente
 
-### Archivo config.json
+```python
+import pandas as pd
+from smart_detector import detect_relationships
+from ai_validator import analyze_database_with_ai
 
-```json
-{
-  "database": {
-    "default_type": "sqlite",
-    "sample_db": "example_store.db"
-  },
-  "analysis": {
-    "use_embeddings": true,
-    "use_llm": true,
-    "max_llm_verifications": 5,
-    "confidence_threshold": 30
-  },
-  "ollama": {
-    "url": "http://localhost:11434",
-    "model": "llama3.2:3b",
-    "timeout": 30
-  }
+# Cargar tablas
+tables = {
+    'patients': pd.read_csv('patients.csv'),
+    'appointments': pd.read_csv('appointments.csv'),
+    'medications': pd.read_csv('medications.csv')
 }
+
+# Opción 1: Solo detección
+candidates = detect_relationships(tables)
+
+# Opción 2: Detección + Validación AI
+candidates, validations = analyze_database_with_ai(tables, top_n=10)
 ```
 
-## 🐛 Solución de Errores Comunes
+## 🎯 Cómo Funciona
 
-### Error: "Object of type DataFrame is not JSON serializable"
+### Fase 1: Detección de Claves Primarias
+```
+🔑 Detectando claves primarias...
+  - patients: id (confianza: 100%)
+  - pets: id (confianza: 100%)
+  - appointments: id (confianza: 100%)
+```
 
-**Causa**: El LLM verifier original intentaba serializar DataFrames directamente.
+### Fase 2: Análisis de Columnas
+```
+🔍 Analizando columnas de todas las tablas...
 
-**Solución**: ✅ **YA CORREGIDO** en v2.0
-- Los DataFrames se convierten a tipos serializables automáticamente
-- Se implementó `_serialize_dataframe()` que maneja todos los tipos numpy/pandas
+Tabla: patients
+  - id (PK): int64, 5 únicos, 0 nulos
+  - name: object, 5 únicos, 0 nulos
+  - email: object, 5 únicos, 0 nulos
 
+Tabla: pets
+  - id (PK): int64, 5 únicos, 0 nulos
+  - patient_id: int64, 4 únicos, 0 nulos
+  - name: object, 5 únicos, 0 nulos
+```
+
+### Fase 3: Detección de Relaciones
+El sistema evalúa cada par de columnas considerando:
+
+1. **Similitud de Nombres (30% peso)**
+   - Coincidencia exacta: 100%
+   - Contención: 80% (ej: `patient` en `patient_id`)
+   - Patrones FK: 90% (ej: `pets.patient_id` → `patients.id`)
+   - PKs entre tablas: 0% (ej: `pets.id` ↛ `patients.id`)
+
+2. **Compatibilidad de Tipos (10% peso)**
+   - Mismo tipo: 100%
+   - Tipos compatibles: 80%
+
+3. **Coincidencia de Valores (50% peso)** ⭐
+   - >80% coincidencia: 100% score
+   - 50-80% coincidencia: 80% score
+   - 20-50% coincidencia: 50% score
+   - <20% coincidencia: proporcional
+
+4. **Similitud de Patrones (10% peso)**
+   - Mismo patrón dominante: 100%
+   - Patrones similares: 70%
+
+### Fase 4: Validación con AI
+```
+🤖 VALIDACIÓN AI - Modelo: llama2:latest
+============================================================
+
+[1/5] Validando con AI:
+   pets.patient_id → patients.patient_id
+   🤖 Consultando llama2:latest...
+   Resultado: ✅ VÁLIDA (Confianza AI: 95.0%)
+   Explicación: La relación es correcta. La columna patient_id en pets 
+   referencia a patient_id en patients, indicando qué paciente es dueño 
+   de cada mascota...
+```
+
+## 📊 Salida Ejemplo
+
+```
+📊 Top 10 Relaciones Encontradas:
+================================================================================
+
+🔑 Claves Primarias Detectadas:
+  - patients.id
+  - pets.id
+  - appointments.id
+
+1. pets.patient_id → patients.id ✓ (FK → PK)
+   Confianza: 95.0%
+   Evidencia:
+   - Similitud de nombres: 95.0%
+   - Compatibilidad de tipos: 100.0%
+   - Coincidencia de valores: 100.0% (score: 100.0%)
+   - Similitud de patrones: 100.0%
+   - ✓ Bonus por patrón FK clásico: +20.0%
+
+2. appointments.patient_id → patients.id ✓ (FK → PK)
+   Confianza: 92.5%
+   Evidencia:
+   - Similitud de nombres: 95.0%
+   - Compatibilidad de tipos: 100.0%
+   - Coincidencia de valores: 80.0% (score: 100.0%)
+   - Similitud de patrones: 100.0%
+
+3. appointments.pet_id → pets.id ✓ (FK → PK)
+   Confianza: 91.0%
+   Evidencia:
+   - Similitud de nombres: 95.0%
+   - Compatibilidad de tipos: 100.0%
+   - Coincidencia de valores: 100.0% (score: 100.0%)
+   - Similitud de patrones: 100.0%
+
+❌ NO DETECTADAS (Correctamente evitadas):
+- pets.id → patients.id (ambas son PKs)
+- appointments.id → patients.id (ambas son PKs)
+- pets.id → appointments.id (ambas son PKs)
+```
+
+## 🔧 Personalización
+
+### Ajustar pesos de scoring
 ```python
-# Código corregido internamente:
-def _serialize_dataframe(self, df: pd.DataFrame) -> Dict[str, Any]:
-    serializable_data = []
-    for _, row in df.iterrows():
-        row_data = {}
-        for col, value in row.items():
-            if pd.isna(value):
-                row_data[col] = None
-            elif isinstance(value, (np.integer, np.int64)):
-                row_data[col] = int(value)
-            # ... más conversiones
+# En SmartRelationshipDetector._evaluate_relationship()
+scores.append(name_score * 0.3)     # Peso nombre
+scores.append(type_score * 0.1)     # Peso tipo
+scores.append(value_score * 0.5)    # Peso valores
+scores.append(pattern_score * 0.1)  # Peso patrones
 ```
 
-### Error: "sentence-transformers not found"
+### Añadir patrones de ID personalizados
+```python
+detector = SmartRelationshipDetector(tables)
 
-**Solución**:
+# Agregar patrones específicos de tu sistema
+detector.common_id_patterns.extend([
+    r'_codigo
+
+## 📝 Archivos Generados
+
+- `relationships.json`: Todas las relaciones detectadas con evidencia
+- Logs en consola con detalles del análisis
+
+## 🧪 Testing y Verificación
+
+### Test de No-Confusión de PKs
+Para verificar que el sistema no confunde PKs entre tablas:
+
 ```bash
-pip install sentence-transformers
-# o usar solo detección básica:
-tool = CompleteDataTool(db_path="db.sqlite", use_embeddings=False)
+python test_pk_detection.py
 ```
 
-### Error: "Ollama connection failed"
+### Test de Nombres Complejos
+Para probar con nombres no estándar:
 
-**Solución**:
 ```bash
-# 1. Instalar Ollama
-curl -fsSL https://ollama.ai/install.sh | sh  # Linux/Mac
-# o descargar desde https://ollama.ai para Windows
+python test_complex_names.py
+```
 
-# 2. Iniciar servidor
+Output esperado:
+```
+🧪 TEST: Detección con Nombres de Columnas No Estándar
+======================================================================
+
+🔑 Detectando claves primarias...
+  - patients: PatientUID (confianza: 100%)
+  - pets: AnimalIdentifier (confianza: 100%)
+  - appointments: CitaID (confianza: 100%)
+
+✅ ENCONTRADA: pets.OwnerPatientCode → patients.PatientUID
+   Confianza: 96.5%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: appointments.pacienteIdentificador → patients.PatientUID
+   Confianza: 94.0%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: prescriptions.MedicationCode → medications.MedicationUUID
+   Confianza: 91.5%
+   Coincidencia valores: 75.0%
+
+📈 Resumen: 7/7 relaciones esperadas encontradas
+
+🔤 Análisis de Descomposición de Nombres:
+----------------------------------------------------------------------
+
+'OwnerPatientCode':
+  - Palabras: {'owner', 'patient', 'code'}
+  - Palabras base: {'owner', 'patient'}
+  - Tiene ID: True
+
+'pacienteIdentificador':
+  - Palabras: {'paciente', 'identificador'}
+  - Palabras base: {'paciente'}
+  - Tiene ID: True
+```
+
+## 📝 Ejemplos de Uso con Nombres No Estándar
+
+### Ejemplo 1: Base de datos con nomenclatura mixta
+```python
+tables = {
+    'Customers': pd.DataFrame({
+        'CustomerUID': ['C001', 'C002', 'C003'],
+        'FullName': ['John Doe', 'Jane Smith', 'Bob Johnson']
+    }),
+    'Orders': pd.DataFrame({
+        'OrderIdentifier': ['O1001', 'O1002', 'O1003'],
+        'ClientReference': ['C001', 'C002', 'C001']  # FK a Customers.CustomerUID
+    })
+}
+
+detector = SmartRelationshipDetector(tables)
+candidates = detector.find_relationships()
+
+# Detectará: Orders.ClientReference → Customers.CustomerUID
+```
+
+### Ejemplo 2: Nombres en español/mixtos
+```python
+tables = {
+    'pacientes': pd.DataFrame({
+        'pacienteID': [1, 2, 3],
+        'nombreCompleto': ['Juan', 'María', 'Carlos']
+    }),
+    'citas': pd.DataFrame({
+        'citaNumero': [101, 102, 103],
+        'pacienteIdentificador': [1, 2, 1]  # FK a pacientes.pacienteID
+    })
+}
+
+# El sistema detectará la relación correctamente
+```
+
+### Ejemplo 3: CamelCase y términos técnicos
+```python
+tables = {
+    'SystemUsers': pd.DataFrame({
+        'UserGUID': ['550e8400-e29b-41d4-a716-446655440001', ...],
+        'Username': ['admin', 'user1', 'user2']
+    }),
+    'AuditLogs': pd.DataFrame({
+        'LogEntryID': [1, 2, 3],
+        'PerformedByUserIdentifier': ['550e8400-e29b-41d4-a716-446655440001', ...]
+    })
+}
+
+# Detectará: AuditLogs.PerformedByUserIdentifier → SystemUsers.UserGUID
+```
+
+## ⚠️ Consideraciones
+
+1. **Performance**: El análisis de valores puede ser lento en tablas grandes
+2. **Memoria**: Carga todas las tablas en memoria
+3. **AI**: Requiere Ollama ejecutándose localmente
+4. **Precisión**: Los resultados son sugerencias, siempre revisar manualmente
+
+## 🐛 Solución de Problemas
+
+### "Ollama no está disponible"
+```bash
+# Iniciar Ollama
 ollama serve
 
-# 3. Instalar modelo
-ollama pull llama3.2:3b
-
-# 4. Verificar conexión
+# Verificar que esté corriendo
 curl http://localhost:11434/api/tags
 ```
 
-### Error: "No relationships detected"
+### "No se encontraron relaciones"
+- Verificar que las columnas tengan valores coincidentes
+- Ajustar el umbral mínimo de confianza (default: 0.3)
+- Revisar los nombres de columnas
 
-**Posibles causas y soluciones**:
+### "Se detectan relaciones incorrectas entre PKs"
+El sistema ya incluye protección contra esto, pero si sucede:
+- Verificar que las PKs se detecten correctamente
+- Revisar el método `_calculate_name_similarity()`
+- Aumentar la penalización para relaciones PK-PK
 
-1. **Umbral de confianza muy alto**:
-```python
-# Reducir umbral
-tool = CompleteDataTool(db_path="db.sqlite")
-tool.confidence_threshold = 20  # Default: 30
-```
+### Errores de memoria
+- Procesar tablas más pequeñas
+- Usar samples de datos
+- Aumentar la memoria disponible
 
-2. **Datos de muestra insuficientes**:
-```python
-# Aumentar muestra
-tool._get_sample_data(table_name, limit=20)  # Default: 10
-```
+## 🔧 Cambios Clave para Manejar Nombres No Estándar
 
-3. **Patrones FK no estándar**:
-```python
-# Agregar patrones personalizados
-tool.fk_patterns.extend([r'.*_foreign$', r'ref_.*'])
-```
+1. **Detección flexible de PKs**: El sistema identifica PKs con diversos patrones:
+   ```python
+   # Detecta como PKs:
+   - id, uid, uuid, guid, pk
+   - PatientUID, CustomerGUID, AnimalIdentifier
+   - identificador, codigo, numero
+   - Columnas únicas sin nulos con nombres sugestivos
+   ```
 
-## 📊 Niveles de Detección
+2. **Descomposición inteligente de nombres**:
+   ```python
+   def _extract_name_components(self, column_name):
+       # 'OwnerPatientCode' → ['owner', 'patient', 'code']
+       # 'pacienteIdentificador' → ['paciente', 'identificador']
+       # Separa CamelCase, snake_case, kebab-case
+   ```
 
-### 1. Básico (Sin dependencias externas)
-```python
-tool = CompleteDataTool(db_path="db.sqlite", use_embeddings=False, use_llm=False)
-```
-- ✅ Detección por patrones de nombres
-- ✅ Validación con datos de muestra
-- ✅ Exportación DBML
-- ⚡ Rápido y ligero
+3. **Análisis semántico profundo**:
+   ```python
+   # Detecta relaciones aunque los nombres sean diferentes:
+   - pets.OwnerPatientCode → patients.PatientUID
+   - orders.ClientReference → customers.CustomerIdentifier
+   - citas.pacienteIdentificador → pacientes.uid
+   ```
 
-### 2. Con Embeddings (Recomendado)
-```python
-tool = CompleteDataTool(db_path="db.sqlite", use_embeddings=True, use_llm=False)
-```
-- ✅ Todo lo anterior +
-- 🧠 Similitud semántica
-- 🎯 Detección de relaciones conceptuales
-- 📈 Mayor precisión
+4. **Verificación de palabras relacionadas**:
+   ```python
+   def _words_are_related(self, word1, word2):
+       # Verifica: coincidencia exacta, contenido, plurales,
+       # alta similitud (>85%), mapeos semánticos
+   ```
 
-### 3. Completo (Máxima precisión)
-```python
-tool = CompleteDataTool(db_path="db.sqlite", use_embeddings=True, use_llm=True)
-```
-- ✅ Todo lo anterior +
-- 🤖 Verificación con IA
-- 📝 Explicaciones detalladas
-- 🎯 Cardinalidad sugerida
+5. **Sistema robusto anti-confusión**:
+   - Detecta cuando ambas columnas son PKs → penalización
+   - Identifica patrones FK semánticos → bonus
+   - Prioriza coincidencia de valores (50% del peso)
 
-## 🗄️ Compatibilidad de Bases de Datos
+## 🚀 Mejoras Futuras
 
-### SQLite (Completamente soportado)
-```python
-tool = CompleteDataTool("database.sqlite")
-```
+- [ ] Soporte para más tipos de bases de datos
+- [ ] Detección de relaciones N:M automática
+- [ ] Embeddings para similitud semántica avanzada
+- [ ] Detección de idioma automática para nombres de columnas
+- [ ] Aprendizaje de patrones de nombres específicos del dominio
+- [ ] Interfaz web interactiva
+- [ ] API REST para integración
+- [ ] Soporte para detección de relaciones compuestas
+- [ ] Análisis de cardinalidad automático
+- [ ] Generación de diagramas ER
+- [ ] Exportación a formatos de modelado (DBM, SQL)
+- [ ] Cache inteligente de análisis
+- [ ] Procesamiento incremental para bases de datos grandes
+- [ ] Integración con herramientas de documentación de BD
+,     # Para sistemas en español
+    r'_nummer
 
-### PostgreSQL (Experimental)
-```python
-# Instalar driver
-pip install psycopg2-binary
+## 📝 Archivos Generados
 
-# Configurar conexión
-import psycopg2
-conn = psycopg2.connect(
-    host="localhost",
-    database="mydb", 
-    user="user",
-    password="password"
-)
-```
+- `relationships.json`: Todas las relaciones detectadas con evidencia
+- Logs en consola con detalles del análisis
 
-### MySQL (Experimental)
-```python
-# Instalar driver
-pip install pymysql
+## 🧪 Testing y Verificación
 
-# Configurar conexión
-import pymysql
-conn = pymysql.connect(
-    host="localhost",
-    database="mydb",
-    user="user", 
-    password="password"
-)
-```
+### Test de No-Confusión de PKs
+Para verificar que el sistema no confunde PKs entre tablas:
 
-## 📐 Generación de Diagramas
-
-### Exportar a DBML
-```python
-dbml_content = tool.generate_dbml("mi_esquema.dbml", "Mi Proyecto")
-```
-
-### Visualizar en dbdiagram.io
-1. Abrir el archivo `.dbml` generado
-2. Copiar todo el contenido
-3. Ir a [dbdiagram.io](https://dbdiagram.io/d)
-4. Pegar el código en el editor
-5. ¡Disfrutar el diagrama ER interactivo!
-
-### Ejemplo de DBML generado:
-```dbml
-// Mi Proyecto - Generado automáticamente
-
-Table customers {
-  id integer [primary key]
-  name varchar [not null]
-  email varchar
-  created_at timestamp
-}
-
-Table orders {
-  id integer [primary key]
-  customer_id integer [not null]
-  total decimal
-}
-
-// Relación detectada automáticamente
-Ref: orders.customer_id > customers.id // Confianza: 95.0% | LLM: ✅ Válida
-```
-
-## 🚀 Ejemplos de Uso
-
-### Ejemplo 1: E-commerce
-```python
-# Detectar relaciones en BD de e-commerce
-results = analyze_database_complete("ecommerce.db")
-
-# Relaciones típicas detectadas:
-# - orders.customer_id → customers.id
-# - order_items.order_id → orders.id  
-# - order_items.product_id → products.id
-# - products.category_id → categories.id
-```
-
-### Ejemplo 2: CRM
-```python
-# Análisis de sistema CRM
-tool = CompleteDataTool("crm_system.db", use_embeddings=True)
-results = tool.analyze_complete()
-
-# Relaciones típicas:
-# - contacts.company_id → companies.id
-# - deals.contact_id → contacts.id
-# - activities.deal_id → deals.id
-```
-
-### Ejemplo 3: Análisis Masivo
-```python
-import os
-from pathlib import Path
-
-# Analizar múltiples bases de datos
-db_files = Path("databases/").glob("*.db")
-
-for db_file in db_files:
-    print(f"Analizando {db_file.name}...")
-    
-    results = analyze_database_complete(
-        str(db_file),
-        output_dir=f"output/{db_file.stem}",
-        use_embeddings=True,
-        use_llm=False  # Más rápido para análisis masivo
-    )
-    
-    print(f"✅ {results['summary']['detected_relationships']} relaciones detectadas")
-```
-
-## 🔬 Algoritmos de Detección
-
-### 1. Análisis de Patrones
-- Patrones FK comunes: `*_id`, `*_key`, `*_fk`, `*_ref`
-- Prefijos: `id_*`, `fk_*`, `ref_*`
-- Sufijos especiales: `*_foreign`, `*_link`
-
-### 2. Similitud Semántica
-- Embeddings de sentence-transformers
-- Comparación de contexto tabla-columna
-- Mapeo de conceptos relacionados
-
-### 3. Validación de Datos
-- Verificación de integridad referencial
-- Cálculo de ratio de coincidencias
-- Análisis de cardinalidad
-
-### 4. Verificación LLM
-- Análisis contextual con IA
-- Explicación de decisiones
-- Sugerencias de cardinalidad
-
-## 📈 Métricas de Confianza
-
-### Escala de Confianza
-- 🟢 **80-100%**: Alta confianza - Muy probable que sea correcta
-- 🟡 **60-79%**: Confianza media - Revisar manualmente
-- 🔴 **30-59%**: Baja confianza - Requiere validación
-- ❌ **<30%**: Descartada automáticamente
-
-### Factores que Aumentan Confianza
-- ✅ Coincidencia exacta de nombres
-- ✅ Patrón FK reconocido
-- ✅ Alta similitud semántica
-- ✅ Validación con datos reales
-- ✅ Confirmación por LLM
-
-## 🛠️ Desarrollo y Contribución
-
-### Estructura del Proyecto
-```
-enhanced-data-tool/
-├── complete_data_tool.py          # Herramienta principal
-├── enhanced_schema_analyzer.py    # Analizador base
-├── embedding_relationship_detector.py  # Detector con embeddings
-├── robust_llm_verifier.py        # Verificador LLM
-├── setup_tool.py                 # Instalador automático
-├── requirements.txt              # Dependencias
-├── config.json                   # Configuración
-├── example_usage.py              # Ejemplos
-└── output/                       # Resultados
-```
-
-### Contribuir
-1. Fork el repositorio
-2. Crear rama: `git checkout -b feature/nueva-funcionalidad`
-3. Commit: `git commit -m 'Agregar nueva funcionalidad'`
-4. Push: `git push origin feature/nueva-funcionalidad`
-5. Crear Pull Request
-
-### Tests
 ```bash
-# Ejecutar tests
-python -m pytest tests/
-
-# Con cobertura
-python -m pytest --cov=enhanced_data_tool tests/
+python test_pk_detection.py
 ```
 
-## 📝 Roadmap
+### Test de Nombres Complejos
+Para probar con nombres no estándar:
 
-### v2.1 (Próxima versión)
-- [ ] Soporte nativo para PostgreSQL/MySQL
+```bash
+python test_complex_names.py
+```
+
+Output esperado:
+```
+🧪 TEST: Detección con Nombres de Columnas No Estándar
+======================================================================
+
+🔑 Detectando claves primarias...
+  - patients: PatientUID (confianza: 100%)
+  - pets: AnimalIdentifier (confianza: 100%)
+  - appointments: CitaID (confianza: 100%)
+
+✅ ENCONTRADA: pets.OwnerPatientCode → patients.PatientUID
+   Confianza: 96.5%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: appointments.pacienteIdentificador → patients.PatientUID
+   Confianza: 94.0%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: prescriptions.MedicationCode → medications.MedicationUUID
+   Confianza: 91.5%
+   Coincidencia valores: 75.0%
+
+📈 Resumen: 7/7 relaciones esperadas encontradas
+
+🔤 Análisis de Descomposición de Nombres:
+----------------------------------------------------------------------
+
+'OwnerPatientCode':
+  - Palabras: {'owner', 'patient', 'code'}
+  - Palabras base: {'owner', 'patient'}
+  - Tiene ID: True
+
+'pacienteIdentificador':
+  - Palabras: {'paciente', 'identificador'}
+  - Palabras base: {'paciente'}
+  - Tiene ID: True
+```
+
+## 📝 Ejemplos de Uso con Nombres No Estándar
+
+### Ejemplo 1: Base de datos con nomenclatura mixta
+```python
+tables = {
+    'Customers': pd.DataFrame({
+        'CustomerUID': ['C001', 'C002', 'C003'],
+        'FullName': ['John Doe', 'Jane Smith', 'Bob Johnson']
+    }),
+    'Orders': pd.DataFrame({
+        'OrderIdentifier': ['O1001', 'O1002', 'O1003'],
+        'ClientReference': ['C001', 'C002', 'C001']  # FK a Customers.CustomerUID
+    })
+}
+
+detector = SmartRelationshipDetector(tables)
+candidates = detector.find_relationships()
+
+# Detectará: Orders.ClientReference → Customers.CustomerUID
+```
+
+### Ejemplo 2: Nombres en español/mixtos
+```python
+tables = {
+    'pacientes': pd.DataFrame({
+        'pacienteID': [1, 2, 3],
+        'nombreCompleto': ['Juan', 'María', 'Carlos']
+    }),
+    'citas': pd.DataFrame({
+        'citaNumero': [101, 102, 103],
+        'pacienteIdentificador': [1, 2, 1]  # FK a pacientes.pacienteID
+    })
+}
+
+# El sistema detectará la relación correctamente
+```
+
+### Ejemplo 3: CamelCase y términos técnicos
+```python
+tables = {
+    'SystemUsers': pd.DataFrame({
+        'UserGUID': ['550e8400-e29b-41d4-a716-446655440001', ...],
+        'Username': ['admin', 'user1', 'user2']
+    }),
+    'AuditLogs': pd.DataFrame({
+        'LogEntryID': [1, 2, 3],
+        'PerformedByUserIdentifier': ['550e8400-e29b-41d4-a716-446655440001', ...]
+    })
+}
+
+# Detectará: AuditLogs.PerformedByUserIdentifier → SystemUsers.UserGUID
+```
+
+## ⚠️ Consideraciones
+
+1. **Performance**: El análisis de valores puede ser lento en tablas grandes
+2. **Memoria**: Carga todas las tablas en memoria
+3. **AI**: Requiere Ollama ejecutándose localmente
+4. **Precisión**: Los resultados son sugerencias, siempre revisar manualmente
+
+## 🐛 Solución de Problemas
+
+### "Ollama no está disponible"
+```bash
+# Iniciar Ollama
+ollama serve
+
+# Verificar que esté corriendo
+curl http://localhost:11434/api/tags
+```
+
+### "No se encontraron relaciones"
+- Verificar que las columnas tengan valores coincidentes
+- Ajustar el umbral mínimo de confianza (default: 0.3)
+- Revisar los nombres de columnas
+
+### "Se detectan relaciones incorrectas entre PKs"
+El sistema ya incluye protección contra esto, pero si sucede:
+- Verificar que las PKs se detecten correctamente
+- Revisar el método `_calculate_name_similarity()`
+- Aumentar la penalización para relaciones PK-PK
+
+### Errores de memoria
+- Procesar tablas más pequeñas
+- Usar samples de datos
+- Aumentar la memoria disponible
+
+## 🔧 Cambios Clave para Evitar Confusión de PKs
+
+1. **Detección automática de PKs**: El sistema identifica columnas que son PKs basándose en:
+   - Valores únicos para cada fila
+   - Sin valores nulos
+   - Nombres típicos ('id', 'tabla_id')
+
+2. **Reglas de similitud mejoradas**:
+   ```python
+   # REGLA 1: PKs de diferentes tablas NO se relacionan
+   if source_name == 'id' and target_name == 'id':
+       return 0.0
+   
+   # REGLA 2: Patrón FK clásico obtiene alta puntuación
+   # pets.patient_id → patients.id = 95% confianza
+   ```
+
+3. **Penalización en evaluación**:
+   ```python
+   # Si ambas son PKs, penalización fuerte
+   if source_is_pk and target_is_pk:
+       scores.append(-0.5)  # -50% al score total
+   ```
+
+4. **Bonus para patrones correctos**:
+   ```python
+   # Bonus si detectamos patrón FK → PK correcto
+   if target_is_pk and not source_is_pk:
+       if source_column.endswith(f"{target_table}_id"):
+           scores.append(0.2)  # +20% bonus
+   ```
+
+## 🚀 Mejoras Futuras
+
+- [ ] Soporte para más tipos de bases de datos
 - [ ] Detección de relaciones N:M
-- [ ] Exportación a SQL DDL
-- [ ] Interfaz web básica
+- [ ] Embeddings para similitud semántica
+- [ ] Interfaz web
+- [ ] Procesamiento en paralelo
+- [ ] Cache de resultados
+,     # Para sistemas en alemán
+    r'_ref
 
-### v2.2
-- [ ] API REST
-- [ ] Más formatos de exportación (PlantUML, Mermaid)
-- [ ] Detección de índices recomendados
-- [ ] Análisis de performance
+## 📝 Archivos Generados
 
-### v3.0 (Futuro)
-- [ ] Interfaz gráfica completa
-- [ ] Soporte para NoSQL
-- [ ] Integración con herramientas BI
-- [ ] Análisis de calidad de datos
+- `relationships.json`: Todas las relaciones detectadas con evidencia
+- Logs en consola con detalles del análisis
 
-## 🤝 Soporte
+## 🧪 Testing y Verificación
 
-### Reportar Bugs
-- [GitHub Issues](https://github.com/Constanzafl/data_tool/issues)
-- Incluir: versión, SO, base de datos, log completo
+### Test de No-Confusión de PKs
+Para verificar que el sistema no confunde PKs entre tablas:
 
-### Preguntas Frecuentes
+```bash
+python test_pk_detection.py
+```
 
-**P: ¿Funciona sin conexión a internet?**
-R: Sí, completamente. Solo la primera instalación de embeddings requiere descarga.
+### Test de Nombres Complejos
+Para probar con nombres no estándar:
 
-**P: ¿Es seguro? ¿Se envían datos externos?**
-R: Totalmente seguro. Todo procesa localmente, incluso el LLM con Ollama.
+```bash
+python test_complex_names.py
+```
 
-**P: ¿Qué tan preciso es?**
-R: En tests internos: 85-95% de precisión en relaciones obvias, 70-80% en relaciones complejas.
+Output esperado:
+```
+🧪 TEST: Detección con Nombres de Columnas No Estándar
+======================================================================
 
-**P: ¿Funciona con bases de datos grandes?**
-R: Sí, pero usa muestreo de datos para performance. Configurable en `sample_size`.
+🔑 Detectando claves primarias...
+  - patients: PatientUID (confianza: 100%)
+  - pets: AnimalIdentifier (confianza: 100%)
+  - appointments: CitaID (confianza: 100%)
 
-## 📄 Licencia
+✅ ENCONTRADA: pets.OwnerPatientCode → patients.PatientUID
+   Confianza: 96.5%
+   Coincidencia valores: 80.0%
 
-MIT License - Ver archivo LICENSE para detalles.
+✅ ENCONTRADA: appointments.pacienteIdentificador → patients.PatientUID
+   Confianza: 94.0%
+   Coincidencia valores: 80.0%
 
-## 🙏 Agradecimientos
+✅ ENCONTRADA: prescriptions.MedicationCode → medications.MedicationUUID
+   Confianza: 91.5%
+   Coincidencia valores: 75.0%
 
-- [sentence-transformers](https://github.com/UKPLab/sentence-transformers) por embeddings semánticos
-- [Ollama](https://ollama.ai) por LLMs locales
-- [dbdiagram.io](https://dbdiagram.io) por visualización de diagramas
-- Comunidad open source por feedback y contribuciones
+📈 Resumen: 7/7 relaciones esperadas encontradas
 
----
+🔤 Análisis de Descomposición de Nombres:
+----------------------------------------------------------------------
 
-⭐ **¡Si te gusta el proyecto, dale una estrella en GitHub!**
+'OwnerPatientCode':
+  - Palabras: {'owner', 'patient', 'code'}
+  - Palabras base: {'owner', 'patient'}
+  - Tiene ID: True
 
-🚀 **¡Comienza ahora!** `python setup_tool.py`
+'pacienteIdentificador':
+  - Palabras: {'paciente', 'identificador'}
+  - Palabras base: {'paciente'}
+  - Tiene ID: True
+```
+
+## 📝 Ejemplos de Uso con Nombres No Estándar
+
+### Ejemplo 1: Base de datos con nomenclatura mixta
+```python
+tables = {
+    'Customers': pd.DataFrame({
+        'CustomerUID': ['C001', 'C002', 'C003'],
+        'FullName': ['John Doe', 'Jane Smith', 'Bob Johnson']
+    }),
+    'Orders': pd.DataFrame({
+        'OrderIdentifier': ['O1001', 'O1002', 'O1003'],
+        'ClientReference': ['C001', 'C002', 'C001']  # FK a Customers.CustomerUID
+    })
+}
+
+detector = SmartRelationshipDetector(tables)
+candidates = detector.find_relationships()
+
+# Detectará: Orders.ClientReference → Customers.CustomerUID
+```
+
+### Ejemplo 2: Nombres en español/mixtos
+```python
+tables = {
+    'pacientes': pd.DataFrame({
+        'pacienteID': [1, 2, 3],
+        'nombreCompleto': ['Juan', 'María', 'Carlos']
+    }),
+    'citas': pd.DataFrame({
+        'citaNumero': [101, 102, 103],
+        'pacienteIdentificador': [1, 2, 1]  # FK a pacientes.pacienteID
+    })
+}
+
+# El sistema detectará la relación correctamente
+```
+
+### Ejemplo 3: CamelCase y términos técnicos
+```python
+tables = {
+    'SystemUsers': pd.DataFrame({
+        'UserGUID': ['550e8400-e29b-41d4-a716-446655440001', ...],
+        'Username': ['admin', 'user1', 'user2']
+    }),
+    'AuditLogs': pd.DataFrame({
+        'LogEntryID': [1, 2, 3],
+        'PerformedByUserIdentifier': ['550e8400-e29b-41d4-a716-446655440001', ...]
+    })
+}
+
+# Detectará: AuditLogs.PerformedByUserIdentifier → SystemUsers.UserGUID
+```
+
+## ⚠️ Consideraciones
+
+1. **Performance**: El análisis de valores puede ser lento en tablas grandes
+2. **Memoria**: Carga todas las tablas en memoria
+3. **AI**: Requiere Ollama ejecutándose localmente
+4. **Precisión**: Los resultados son sugerencias, siempre revisar manualmente
+
+## 🐛 Solución de Problemas
+
+### "Ollama no está disponible"
+```bash
+# Iniciar Ollama
+ollama serve
+
+# Verificar que esté corriendo
+curl http://localhost:11434/api/tags
+```
+
+### "No se encontraron relaciones"
+- Verificar que las columnas tengan valores coincidentes
+- Ajustar el umbral mínimo de confianza (default: 0.3)
+- Revisar los nombres de columnas
+
+### "Se detectan relaciones incorrectas entre PKs"
+El sistema ya incluye protección contra esto, pero si sucede:
+- Verificar que las PKs se detecten correctamente
+- Revisar el método `_calculate_name_similarity()`
+- Aumentar la penalización para relaciones PK-PK
+
+### Errores de memoria
+- Procesar tablas más pequeñas
+- Usar samples de datos
+- Aumentar la memoria disponible
+
+## 🔧 Cambios Clave para Evitar Confusión de PKs
+
+1. **Detección automática de PKs**: El sistema identifica columnas que son PKs basándose en:
+   - Valores únicos para cada fila
+   - Sin valores nulos
+   - Nombres típicos ('id', 'tabla_id')
+
+2. **Reglas de similitud mejoradas**:
+   ```python
+   # REGLA 1: PKs de diferentes tablas NO se relacionan
+   if source_name == 'id' and target_name == 'id':
+       return 0.0
+   
+   # REGLA 2: Patrón FK clásico obtiene alta puntuación
+   # pets.patient_id → patients.id = 95% confianza
+   ```
+
+3. **Penalización en evaluación**:
+   ```python
+   # Si ambas son PKs, penalización fuerte
+   if source_is_pk and target_is_pk:
+       scores.append(-0.5)  # -50% al score total
+   ```
+
+4. **Bonus para patrones correctos**:
+   ```python
+   # Bonus si detectamos patrón FK → PK correcto
+   if target_is_pk and not source_is_pk:
+       if source_column.endswith(f"{target_table}_id"):
+           scores.append(0.2)  # +20% bonus
+   ```
+
+## 🚀 Mejoras Futuras
+
+- [ ] Soporte para más tipos de bases de datos
+- [ ] Detección de relaciones N:M
+- [ ] Embeddings para similitud semántica
+- [ ] Interfaz web
+- [ ] Procesamiento en paralelo
+- [ ] Cache de resultados
+,        # Referencias
+    r'_fk
+
+## 📝 Archivos Generados
+
+- `relationships.json`: Todas las relaciones detectadas con evidencia
+- Logs en consola con detalles del análisis
+
+## 🧪 Testing y Verificación
+
+### Test de No-Confusión de PKs
+Para verificar que el sistema no confunde PKs entre tablas:
+
+```bash
+python test_pk_detection.py
+```
+
+### Test de Nombres Complejos
+Para probar con nombres no estándar:
+
+```bash
+python test_complex_names.py
+```
+
+Output esperado:
+```
+🧪 TEST: Detección con Nombres de Columnas No Estándar
+======================================================================
+
+🔑 Detectando claves primarias...
+  - patients: PatientUID (confianza: 100%)
+  - pets: AnimalIdentifier (confianza: 100%)
+  - appointments: CitaID (confianza: 100%)
+
+✅ ENCONTRADA: pets.OwnerPatientCode → patients.PatientUID
+   Confianza: 96.5%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: appointments.pacienteIdentificador → patients.PatientUID
+   Confianza: 94.0%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: prescriptions.MedicationCode → medications.MedicationUUID
+   Confianza: 91.5%
+   Coincidencia valores: 75.0%
+
+📈 Resumen: 7/7 relaciones esperadas encontradas
+
+🔤 Análisis de Descomposición de Nombres:
+----------------------------------------------------------------------
+
+'OwnerPatientCode':
+  - Palabras: {'owner', 'patient', 'code'}
+  - Palabras base: {'owner', 'patient'}
+  - Tiene ID: True
+
+'pacienteIdentificador':
+  - Palabras: {'paciente', 'identificador'}
+  - Palabras base: {'paciente'}
+  - Tiene ID: True
+```
+
+## 📝 Ejemplos de Uso con Nombres No Estándar
+
+### Ejemplo 1: Base de datos con nomenclatura mixta
+```python
+tables = {
+    'Customers': pd.DataFrame({
+        'CustomerUID': ['C001', 'C002', 'C003'],
+        'FullName': ['John Doe', 'Jane Smith', 'Bob Johnson']
+    }),
+    'Orders': pd.DataFrame({
+        'OrderIdentifier': ['O1001', 'O1002', 'O1003'],
+        'ClientReference': ['C001', 'C002', 'C001']  # FK a Customers.CustomerUID
+    })
+}
+
+detector = SmartRelationshipDetector(tables)
+candidates = detector.find_relationships()
+
+# Detectará: Orders.ClientReference → Customers.CustomerUID
+```
+
+### Ejemplo 2: Nombres en español/mixtos
+```python
+tables = {
+    'pacientes': pd.DataFrame({
+        'pacienteID': [1, 2, 3],
+        'nombreCompleto': ['Juan', 'María', 'Carlos']
+    }),
+    'citas': pd.DataFrame({
+        'citaNumero': [101, 102, 103],
+        'pacienteIdentificador': [1, 2, 1]  # FK a pacientes.pacienteID
+    })
+}
+
+# El sistema detectará la relación correctamente
+```
+
+### Ejemplo 3: CamelCase y términos técnicos
+```python
+tables = {
+    'SystemUsers': pd.DataFrame({
+        'UserGUID': ['550e8400-e29b-41d4-a716-446655440001', ...],
+        'Username': ['admin', 'user1', 'user2']
+    }),
+    'AuditLogs': pd.DataFrame({
+        'LogEntryID': [1, 2, 3],
+        'PerformedByUserIdentifier': ['550e8400-e29b-41d4-a716-446655440001', ...]
+    })
+}
+
+# Detectará: AuditLogs.PerformedByUserIdentifier → SystemUsers.UserGUID
+```
+
+## ⚠️ Consideraciones
+
+1. **Performance**: El análisis de valores puede ser lento en tablas grandes
+2. **Memoria**: Carga todas las tablas en memoria
+3. **AI**: Requiere Ollama ejecutándose localmente
+4. **Precisión**: Los resultados son sugerencias, siempre revisar manualmente
+
+## 🐛 Solución de Problemas
+
+### "Ollama no está disponible"
+```bash
+# Iniciar Ollama
+ollama serve
+
+# Verificar que esté corriendo
+curl http://localhost:11434/api/tags
+```
+
+### "No se encontraron relaciones"
+- Verificar que las columnas tengan valores coincidentes
+- Ajustar el umbral mínimo de confianza (default: 0.3)
+- Revisar los nombres de columnas
+
+### "Se detectan relaciones incorrectas entre PKs"
+El sistema ya incluye protección contra esto, pero si sucede:
+- Verificar que las PKs se detecten correctamente
+- Revisar el método `_calculate_name_similarity()`
+- Aumentar la penalización para relaciones PK-PK
+
+### Errores de memoria
+- Procesar tablas más pequeñas
+- Usar samples de datos
+- Aumentar la memoria disponible
+
+## 🔧 Cambios Clave para Evitar Confusión de PKs
+
+1. **Detección automática de PKs**: El sistema identifica columnas que son PKs basándose en:
+   - Valores únicos para cada fila
+   - Sin valores nulos
+   - Nombres típicos ('id', 'tabla_id')
+
+2. **Reglas de similitud mejoradas**:
+   ```python
+   # REGLA 1: PKs de diferentes tablas NO se relacionan
+   if source_name == 'id' and target_name == 'id':
+       return 0.0
+   
+   # REGLA 2: Patrón FK clásico obtiene alta puntuación
+   # pets.patient_id → patients.id = 95% confianza
+   ```
+
+3. **Penalización en evaluación**:
+   ```python
+   # Si ambas son PKs, penalización fuerte
+   if source_is_pk and target_is_pk:
+       scores.append(-0.5)  # -50% al score total
+   ```
+
+4. **Bonus para patrones correctos**:
+   ```python
+   # Bonus si detectamos patrón FK → PK correcto
+   if target_is_pk and not source_is_pk:
+       if source_column.endswith(f"{target_table}_id"):
+           scores.append(0.2)  # +20% bonus
+   ```
+
+## 🚀 Mejoras Futuras
+
+- [ ] Soporte para más tipos de bases de datos
+- [ ] Detección de relaciones N:M
+- [ ] Embeddings para similitud semántica
+- [ ] Interfaz web
+- [ ] Procesamiento en paralelo
+- [ ] Cache de resultados
+          # Foreign keys explícitas
+])
+
+# Agregar palabras clave de ID
+detector.id_keywords.extend([
+    'referencia', 'clave', 'llave',  # Español
+    'schlüssel', 'nummer',           # Alemán
+    'chiave', 'codice'               # Italiano
+])
+```
+
+### Añadir mapeos semánticos personalizados
+```python
+# Extender mapeos para tu dominio específico
+detector.common_name_mappings.update({
+    'student': ['student', 'alumno', 'estudiante', 'pupil'],
+    'teacher': ['teacher', 'profesor', 'docente', 'instructor'],
+    'course': ['course', 'curso', 'clase', 'subject', 'materia'],
+    'employee': ['employee', 'empleado', 'worker', 'staff', 'personal']
+})
+```
+
+### Crear detector personalizado para tu dominio
+```python
+class MedicalDatabaseDetector(SmartRelationshipDetector):
+    def __init__(self, tables):
+        super().__init__(tables)
+        
+        # Agregar términos médicos específicos
+        self.common_name_mappings.update({
+            'patient': ['patient', 'paciente', 'enfermo', 'case', 'subject'],
+            'doctor': ['doctor', 'physician', 'medico', 'practitioner', 'provider'],
+            'diagnosis': ['diagnosis', 'diagnostico', 'dx', 'finding'],
+            'treatment': ['treatment', 'tratamiento', 'therapy', 'intervention']
+        })
+        
+        # Patrones específicos del dominio médico
+        self.medical_patterns = [
+            r'_mrn
+
+## 📝 Archivos Generados
+
+- `relationships.json`: Todas las relaciones detectadas con evidencia
+- Logs en consola con detalles del análisis
+
+## 🧪 Testing y Verificación
+
+### Test de No-Confusión de PKs
+Para verificar que el sistema no confunde PKs entre tablas:
+
+```bash
+python test_pk_detection.py
+```
+
+### Test de Nombres Complejos
+Para probar con nombres no estándar:
+
+```bash
+python test_complex_names.py
+```
+
+Output esperado:
+```
+🧪 TEST: Detección con Nombres de Columnas No Estándar
+======================================================================
+
+🔑 Detectando claves primarias...
+  - patients: PatientUID (confianza: 100%)
+  - pets: AnimalIdentifier (confianza: 100%)
+  - appointments: CitaID (confianza: 100%)
+
+✅ ENCONTRADA: pets.OwnerPatientCode → patients.PatientUID
+   Confianza: 96.5%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: appointments.pacienteIdentificador → patients.PatientUID
+   Confianza: 94.0%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: prescriptions.MedicationCode → medications.MedicationUUID
+   Confianza: 91.5%
+   Coincidencia valores: 75.0%
+
+📈 Resumen: 7/7 relaciones esperadas encontradas
+
+🔤 Análisis de Descomposición de Nombres:
+----------------------------------------------------------------------
+
+'OwnerPatientCode':
+  - Palabras: {'owner', 'patient', 'code'}
+  - Palabras base: {'owner', 'patient'}
+  - Tiene ID: True
+
+'pacienteIdentificador':
+  - Palabras: {'paciente', 'identificador'}
+  - Palabras base: {'paciente'}
+  - Tiene ID: True
+```
+
+## 📝 Ejemplos de Uso con Nombres No Estándar
+
+### Ejemplo 1: Base de datos con nomenclatura mixta
+```python
+tables = {
+    'Customers': pd.DataFrame({
+        'CustomerUID': ['C001', 'C002', 'C003'],
+        'FullName': ['John Doe', 'Jane Smith', 'Bob Johnson']
+    }),
+    'Orders': pd.DataFrame({
+        'OrderIdentifier': ['O1001', 'O1002', 'O1003'],
+        'ClientReference': ['C001', 'C002', 'C001']  # FK a Customers.CustomerUID
+    })
+}
+
+detector = SmartRelationshipDetector(tables)
+candidates = detector.find_relationships()
+
+# Detectará: Orders.ClientReference → Customers.CustomerUID
+```
+
+### Ejemplo 2: Nombres en español/mixtos
+```python
+tables = {
+    'pacientes': pd.DataFrame({
+        'pacienteID': [1, 2, 3],
+        'nombreCompleto': ['Juan', 'María', 'Carlos']
+    }),
+    'citas': pd.DataFrame({
+        'citaNumero': [101, 102, 103],
+        'pacienteIdentificador': [1, 2, 1]  # FK a pacientes.pacienteID
+    })
+}
+
+# El sistema detectará la relación correctamente
+```
+
+### Ejemplo 3: CamelCase y términos técnicos
+```python
+tables = {
+    'SystemUsers': pd.DataFrame({
+        'UserGUID': ['550e8400-e29b-41d4-a716-446655440001', ...],
+        'Username': ['admin', 'user1', 'user2']
+    }),
+    'AuditLogs': pd.DataFrame({
+        'LogEntryID': [1, 2, 3],
+        'PerformedByUserIdentifier': ['550e8400-e29b-41d4-a716-446655440001', ...]
+    })
+}
+
+# Detectará: AuditLogs.PerformedByUserIdentifier → SystemUsers.UserGUID
+```
+
+## ⚠️ Consideraciones
+
+1. **Performance**: El análisis de valores puede ser lento en tablas grandes
+2. **Memoria**: Carga todas las tablas en memoria
+3. **AI**: Requiere Ollama ejecutándose localmente
+4. **Precisión**: Los resultados son sugerencias, siempre revisar manualmente
+
+## 🐛 Solución de Problemas
+
+### "Ollama no está disponible"
+```bash
+# Iniciar Ollama
+ollama serve
+
+# Verificar que esté corriendo
+curl http://localhost:11434/api/tags
+```
+
+### "No se encontraron relaciones"
+- Verificar que las columnas tengan valores coincidentes
+- Ajustar el umbral mínimo de confianza (default: 0.3)
+- Revisar los nombres de columnas
+
+### "Se detectan relaciones incorrectas entre PKs"
+El sistema ya incluye protección contra esto, pero si sucede:
+- Verificar que las PKs se detecten correctamente
+- Revisar el método `_calculate_name_similarity()`
+- Aumentar la penalización para relaciones PK-PK
+
+### Errores de memoria
+- Procesar tablas más pequeñas
+- Usar samples de datos
+- Aumentar la memoria disponible
+
+## 🔧 Cambios Clave para Evitar Confusión de PKs
+
+1. **Detección automática de PKs**: El sistema identifica columnas que son PKs basándose en:
+   - Valores únicos para cada fila
+   - Sin valores nulos
+   - Nombres típicos ('id', 'tabla_id')
+
+2. **Reglas de similitud mejoradas**:
+   ```python
+   # REGLA 1: PKs de diferentes tablas NO se relacionan
+   if source_name == 'id' and target_name == 'id':
+       return 0.0
+   
+   # REGLA 2: Patrón FK clásico obtiene alta puntuación
+   # pets.patient_id → patients.id = 95% confianza
+   ```
+
+3. **Penalización en evaluación**:
+   ```python
+   # Si ambas son PKs, penalización fuerte
+   if source_is_pk and target_is_pk:
+       scores.append(-0.5)  # -50% al score total
+   ```
+
+4. **Bonus para patrones correctos**:
+   ```python
+   # Bonus si detectamos patrón FK → PK correcto
+   if target_is_pk and not source_is_pk:
+       if source_column.endswith(f"{target_table}_id"):
+           scores.append(0.2)  # +20% bonus
+   ```
+
+## 🚀 Mejoras Futuras
+
+- [ ] Soporte para más tipos de bases de datos
+- [ ] Detección de relaciones N:M
+- [ ] Embeddings para similitud semántica
+- [ ] Interfaz web
+- [ ] Procesamiento en paralelo
+- [ ] Cache de resultados
+,    # Medical Record Number
+            r'_npi
+
+## 📝 Archivos Generados
+
+- `relationships.json`: Todas las relaciones detectadas con evidencia
+- Logs en consola con detalles del análisis
+
+## 🧪 Testing y Verificación
+
+### Test de No-Confusión de PKs
+Para verificar que el sistema no confunde PKs entre tablas:
+
+```bash
+python test_pk_detection.py
+```
+
+### Test de Nombres Complejos
+Para probar con nombres no estándar:
+
+```bash
+python test_complex_names.py
+```
+
+Output esperado:
+```
+🧪 TEST: Detección con Nombres de Columnas No Estándar
+======================================================================
+
+🔑 Detectando claves primarias...
+  - patients: PatientUID (confianza: 100%)
+  - pets: AnimalIdentifier (confianza: 100%)
+  - appointments: CitaID (confianza: 100%)
+
+✅ ENCONTRADA: pets.OwnerPatientCode → patients.PatientUID
+   Confianza: 96.5%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: appointments.pacienteIdentificador → patients.PatientUID
+   Confianza: 94.0%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: prescriptions.MedicationCode → medications.MedicationUUID
+   Confianza: 91.5%
+   Coincidencia valores: 75.0%
+
+📈 Resumen: 7/7 relaciones esperadas encontradas
+
+🔤 Análisis de Descomposición de Nombres:
+----------------------------------------------------------------------
+
+'OwnerPatientCode':
+  - Palabras: {'owner', 'patient', 'code'}
+  - Palabras base: {'owner', 'patient'}
+  - Tiene ID: True
+
+'pacienteIdentificador':
+  - Palabras: {'paciente', 'identificador'}
+  - Palabras base: {'paciente'}
+  - Tiene ID: True
+```
+
+## 📝 Ejemplos de Uso con Nombres No Estándar
+
+### Ejemplo 1: Base de datos con nomenclatura mixta
+```python
+tables = {
+    'Customers': pd.DataFrame({
+        'CustomerUID': ['C001', 'C002', 'C003'],
+        'FullName': ['John Doe', 'Jane Smith', 'Bob Johnson']
+    }),
+    'Orders': pd.DataFrame({
+        'OrderIdentifier': ['O1001', 'O1002', 'O1003'],
+        'ClientReference': ['C001', 'C002', 'C001']  # FK a Customers.CustomerUID
+    })
+}
+
+detector = SmartRelationshipDetector(tables)
+candidates = detector.find_relationships()
+
+# Detectará: Orders.ClientReference → Customers.CustomerUID
+```
+
+### Ejemplo 2: Nombres en español/mixtos
+```python
+tables = {
+    'pacientes': pd.DataFrame({
+        'pacienteID': [1, 2, 3],
+        'nombreCompleto': ['Juan', 'María', 'Carlos']
+    }),
+    'citas': pd.DataFrame({
+        'citaNumero': [101, 102, 103],
+        'pacienteIdentificador': [1, 2, 1]  # FK a pacientes.pacienteID
+    })
+}
+
+# El sistema detectará la relación correctamente
+```
+
+### Ejemplo 3: CamelCase y términos técnicos
+```python
+tables = {
+    'SystemUsers': pd.DataFrame({
+        'UserGUID': ['550e8400-e29b-41d4-a716-446655440001', ...],
+        'Username': ['admin', 'user1', 'user2']
+    }),
+    'AuditLogs': pd.DataFrame({
+        'LogEntryID': [1, 2, 3],
+        'PerformedByUserIdentifier': ['550e8400-e29b-41d4-a716-446655440001', ...]
+    })
+}
+
+# Detectará: AuditLogs.PerformedByUserIdentifier → SystemUsers.UserGUID
+```
+
+## ⚠️ Consideraciones
+
+1. **Performance**: El análisis de valores puede ser lento en tablas grandes
+2. **Memoria**: Carga todas las tablas en memoria
+3. **AI**: Requiere Ollama ejecutándose localmente
+4. **Precisión**: Los resultados son sugerencias, siempre revisar manualmente
+
+## 🐛 Solución de Problemas
+
+### "Ollama no está disponible"
+```bash
+# Iniciar Ollama
+ollama serve
+
+# Verificar que esté corriendo
+curl http://localhost:11434/api/tags
+```
+
+### "No se encontraron relaciones"
+- Verificar que las columnas tengan valores coincidentes
+- Ajustar el umbral mínimo de confianza (default: 0.3)
+- Revisar los nombres de columnas
+
+### "Se detectan relaciones incorrectas entre PKs"
+El sistema ya incluye protección contra esto, pero si sucede:
+- Verificar que las PKs se detecten correctamente
+- Revisar el método `_calculate_name_similarity()`
+- Aumentar la penalización para relaciones PK-PK
+
+### Errores de memoria
+- Procesar tablas más pequeñas
+- Usar samples de datos
+- Aumentar la memoria disponible
+
+## 🔧 Cambios Clave para Evitar Confusión de PKs
+
+1. **Detección automática de PKs**: El sistema identifica columnas que son PKs basándose en:
+   - Valores únicos para cada fila
+   - Sin valores nulos
+   - Nombres típicos ('id', 'tabla_id')
+
+2. **Reglas de similitud mejoradas**:
+   ```python
+   # REGLA 1: PKs de diferentes tablas NO se relacionan
+   if source_name == 'id' and target_name == 'id':
+       return 0.0
+   
+   # REGLA 2: Patrón FK clásico obtiene alta puntuación
+   # pets.patient_id → patients.id = 95% confianza
+   ```
+
+3. **Penalización en evaluación**:
+   ```python
+   # Si ambas son PKs, penalización fuerte
+   if source_is_pk and target_is_pk:
+       scores.append(-0.5)  # -50% al score total
+   ```
+
+4. **Bonus para patrones correctos**:
+   ```python
+   # Bonus si detectamos patrón FK → PK correcto
+   if target_is_pk and not source_is_pk:
+       if source_column.endswith(f"{target_table}_id"):
+           scores.append(0.2)  # +20% bonus
+   ```
+
+## 🚀 Mejoras Futuras
+
+- [ ] Soporte para más tipos de bases de datos
+- [ ] Detección de relaciones N:M
+- [ ] Embeddings para similitud semántica
+- [ ] Interfaz web
+- [ ] Procesamiento en paralelo
+- [ ] Cache de resultados
+,    # National Provider Identifier
+            r'_dx
+
+## 📝 Archivos Generados
+
+- `relationships.json`: Todas las relaciones detectadas con evidencia
+- Logs en consola con detalles del análisis
+
+## 🧪 Testing y Verificación
+
+### Test de No-Confusión de PKs
+Para verificar que el sistema no confunde PKs entre tablas:
+
+```bash
+python test_pk_detection.py
+```
+
+### Test de Nombres Complejos
+Para probar con nombres no estándar:
+
+```bash
+python test_complex_names.py
+```
+
+Output esperado:
+```
+🧪 TEST: Detección con Nombres de Columnas No Estándar
+======================================================================
+
+🔑 Detectando claves primarias...
+  - patients: PatientUID (confianza: 100%)
+  - pets: AnimalIdentifier (confianza: 100%)
+  - appointments: CitaID (confianza: 100%)
+
+✅ ENCONTRADA: pets.OwnerPatientCode → patients.PatientUID
+   Confianza: 96.5%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: appointments.pacienteIdentificador → patients.PatientUID
+   Confianza: 94.0%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: prescriptions.MedicationCode → medications.MedicationUUID
+   Confianza: 91.5%
+   Coincidencia valores: 75.0%
+
+📈 Resumen: 7/7 relaciones esperadas encontradas
+
+🔤 Análisis de Descomposición de Nombres:
+----------------------------------------------------------------------
+
+'OwnerPatientCode':
+  - Palabras: {'owner', 'patient', 'code'}
+  - Palabras base: {'owner', 'patient'}
+  - Tiene ID: True
+
+'pacienteIdentificador':
+  - Palabras: {'paciente', 'identificador'}
+  - Palabras base: {'paciente'}
+  - Tiene ID: True
+```
+
+## 📝 Ejemplos de Uso con Nombres No Estándar
+
+### Ejemplo 1: Base de datos con nomenclatura mixta
+```python
+tables = {
+    'Customers': pd.DataFrame({
+        'CustomerUID': ['C001', 'C002', 'C003'],
+        'FullName': ['John Doe', 'Jane Smith', 'Bob Johnson']
+    }),
+    'Orders': pd.DataFrame({
+        'OrderIdentifier': ['O1001', 'O1002', 'O1003'],
+        'ClientReference': ['C001', 'C002', 'C001']  # FK a Customers.CustomerUID
+    })
+}
+
+detector = SmartRelationshipDetector(tables)
+candidates = detector.find_relationships()
+
+# Detectará: Orders.ClientReference → Customers.CustomerUID
+```
+
+### Ejemplo 2: Nombres en español/mixtos
+```python
+tables = {
+    'pacientes': pd.DataFrame({
+        'pacienteID': [1, 2, 3],
+        'nombreCompleto': ['Juan', 'María', 'Carlos']
+    }),
+    'citas': pd.DataFrame({
+        'citaNumero': [101, 102, 103],
+        'pacienteIdentificador': [1, 2, 1]  # FK a pacientes.pacienteID
+    })
+}
+
+# El sistema detectará la relación correctamente
+```
+
+### Ejemplo 3: CamelCase y términos técnicos
+```python
+tables = {
+    'SystemUsers': pd.DataFrame({
+        'UserGUID': ['550e8400-e29b-41d4-a716-446655440001', ...],
+        'Username': ['admin', 'user1', 'user2']
+    }),
+    'AuditLogs': pd.DataFrame({
+        'LogEntryID': [1, 2, 3],
+        'PerformedByUserIdentifier': ['550e8400-e29b-41d4-a716-446655440001', ...]
+    })
+}
+
+# Detectará: AuditLogs.PerformedByUserIdentifier → SystemUsers.UserGUID
+```
+
+## ⚠️ Consideraciones
+
+1. **Performance**: El análisis de valores puede ser lento en tablas grandes
+2. **Memoria**: Carga todas las tablas en memoria
+3. **AI**: Requiere Ollama ejecutándose localmente
+4. **Precisión**: Los resultados son sugerencias, siempre revisar manualmente
+
+## 🐛 Solución de Problemas
+
+### "Ollama no está disponible"
+```bash
+# Iniciar Ollama
+ollama serve
+
+# Verificar que esté corriendo
+curl http://localhost:11434/api/tags
+```
+
+### "No se encontraron relaciones"
+- Verificar que las columnas tengan valores coincidentes
+- Ajustar el umbral mínimo de confianza (default: 0.3)
+- Revisar los nombres de columnas
+
+### "Se detectan relaciones incorrectas entre PKs"
+El sistema ya incluye protección contra esto, pero si sucede:
+- Verificar que las PKs se detecten correctamente
+- Revisar el método `_calculate_name_similarity()`
+- Aumentar la penalización para relaciones PK-PK
+
+### Errores de memoria
+- Procesar tablas más pequeñas
+- Usar samples de datos
+- Aumentar la memoria disponible
+
+## 🔧 Cambios Clave para Evitar Confusión de PKs
+
+1. **Detección automática de PKs**: El sistema identifica columnas que son PKs basándose en:
+   - Valores únicos para cada fila
+   - Sin valores nulos
+   - Nombres típicos ('id', 'tabla_id')
+
+2. **Reglas de similitud mejoradas**:
+   ```python
+   # REGLA 1: PKs de diferentes tablas NO se relacionan
+   if source_name == 'id' and target_name == 'id':
+       return 0.0
+   
+   # REGLA 2: Patrón FK clásico obtiene alta puntuación
+   # pets.patient_id → patients.id = 95% confianza
+   ```
+
+3. **Penalización en evaluación**:
+   ```python
+   # Si ambas son PKs, penalización fuerte
+   if source_is_pk and target_is_pk:
+       scores.append(-0.5)  # -50% al score total
+   ```
+
+4. **Bonus para patrones correctos**:
+   ```python
+   # Bonus si detectamos patrón FK → PK correcto
+   if target_is_pk and not source_is_pk:
+       if source_column.endswith(f"{target_table}_id"):
+           scores.append(0.2)  # +20% bonus
+   ```
+
+## 🚀 Mejoras Futuras
+
+- [ ] Soporte para más tipos de bases de datos
+- [ ] Detección de relaciones N:M
+- [ ] Embeddings para similitud semántica
+- [ ] Interfaz web
+- [ ] Procesamiento en paralelo
+- [ ] Cache de resultados
+,     # Diagnosis code
+            r'_rx
+
+## 📝 Archivos Generados
+
+- `relationships.json`: Todas las relaciones detectadas con evidencia
+- Logs en consola con detalles del análisis
+
+## 🧪 Testing y Verificación
+
+### Test de No-Confusión de PKs
+Para verificar que el sistema no confunde PKs entre tablas:
+
+```bash
+python test_pk_detection.py
+```
+
+### Test de Nombres Complejos
+Para probar con nombres no estándar:
+
+```bash
+python test_complex_names.py
+```
+
+Output esperado:
+```
+🧪 TEST: Detección con Nombres de Columnas No Estándar
+======================================================================
+
+🔑 Detectando claves primarias...
+  - patients: PatientUID (confianza: 100%)
+  - pets: AnimalIdentifier (confianza: 100%)
+  - appointments: CitaID (confianza: 100%)
+
+✅ ENCONTRADA: pets.OwnerPatientCode → patients.PatientUID
+   Confianza: 96.5%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: appointments.pacienteIdentificador → patients.PatientUID
+   Confianza: 94.0%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: prescriptions.MedicationCode → medications.MedicationUUID
+   Confianza: 91.5%
+   Coincidencia valores: 75.0%
+
+📈 Resumen: 7/7 relaciones esperadas encontradas
+
+🔤 Análisis de Descomposición de Nombres:
+----------------------------------------------------------------------
+
+'OwnerPatientCode':
+  - Palabras: {'owner', 'patient', 'code'}
+  - Palabras base: {'owner', 'patient'}
+  - Tiene ID: True
+
+'pacienteIdentificador':
+  - Palabras: {'paciente', 'identificador'}
+  - Palabras base: {'paciente'}
+  - Tiene ID: True
+```
+
+## 📝 Ejemplos de Uso con Nombres No Estándar
+
+### Ejemplo 1: Base de datos con nomenclatura mixta
+```python
+tables = {
+    'Customers': pd.DataFrame({
+        'CustomerUID': ['C001', 'C002', 'C003'],
+        'FullName': ['John Doe', 'Jane Smith', 'Bob Johnson']
+    }),
+    'Orders': pd.DataFrame({
+        'OrderIdentifier': ['O1001', 'O1002', 'O1003'],
+        'ClientReference': ['C001', 'C002', 'C001']  # FK a Customers.CustomerUID
+    })
+}
+
+detector = SmartRelationshipDetector(tables)
+candidates = detector.find_relationships()
+
+# Detectará: Orders.ClientReference → Customers.CustomerUID
+```
+
+### Ejemplo 2: Nombres en español/mixtos
+```python
+tables = {
+    'pacientes': pd.DataFrame({
+        'pacienteID': [1, 2, 3],
+        'nombreCompleto': ['Juan', 'María', 'Carlos']
+    }),
+    'citas': pd.DataFrame({
+        'citaNumero': [101, 102, 103],
+        'pacienteIdentificador': [1, 2, 1]  # FK a pacientes.pacienteID
+    })
+}
+
+# El sistema detectará la relación correctamente
+```
+
+### Ejemplo 3: CamelCase y términos técnicos
+```python
+tables = {
+    'SystemUsers': pd.DataFrame({
+        'UserGUID': ['550e8400-e29b-41d4-a716-446655440001', ...],
+        'Username': ['admin', 'user1', 'user2']
+    }),
+    'AuditLogs': pd.DataFrame({
+        'LogEntryID': [1, 2, 3],
+        'PerformedByUserIdentifier': ['550e8400-e29b-41d4-a716-446655440001', ...]
+    })
+}
+
+# Detectará: AuditLogs.PerformedByUserIdentifier → SystemUsers.UserGUID
+```
+
+## ⚠️ Consideraciones
+
+1. **Performance**: El análisis de valores puede ser lento en tablas grandes
+2. **Memoria**: Carga todas las tablas en memoria
+3. **AI**: Requiere Ollama ejecutándose localmente
+4. **Precisión**: Los resultados son sugerencias, siempre revisar manualmente
+
+## 🐛 Solución de Problemas
+
+### "Ollama no está disponible"
+```bash
+# Iniciar Ollama
+ollama serve
+
+# Verificar que esté corriendo
+curl http://localhost:11434/api/tags
+```
+
+### "No se encontraron relaciones"
+- Verificar que las columnas tengan valores coincidentes
+- Ajustar el umbral mínimo de confianza (default: 0.3)
+- Revisar los nombres de columnas
+
+### "Se detectan relaciones incorrectas entre PKs"
+El sistema ya incluye protección contra esto, pero si sucede:
+- Verificar que las PKs se detecten correctamente
+- Revisar el método `_calculate_name_similarity()`
+- Aumentar la penalización para relaciones PK-PK
+
+### Errores de memoria
+- Procesar tablas más pequeñas
+- Usar samples de datos
+- Aumentar la memoria disponible
+
+## 🔧 Cambios Clave para Evitar Confusión de PKs
+
+1. **Detección automática de PKs**: El sistema identifica columnas que son PKs basándose en:
+   - Valores únicos para cada fila
+   - Sin valores nulos
+   - Nombres típicos ('id', 'tabla_id')
+
+2. **Reglas de similitud mejoradas**:
+   ```python
+   # REGLA 1: PKs de diferentes tablas NO se relacionan
+   if source_name == 'id' and target_name == 'id':
+       return 0.0
+   
+   # REGLA 2: Patrón FK clásico obtiene alta puntuación
+   # pets.patient_id → patients.id = 95% confianza
+   ```
+
+3. **Penalización en evaluación**:
+   ```python
+   # Si ambas son PKs, penalización fuerte
+   if source_is_pk and target_is_pk:
+       scores.append(-0.5)  # -50% al score total
+   ```
+
+4. **Bonus para patrones correctos**:
+   ```python
+   # Bonus si detectamos patrón FK → PK correcto
+   if target_is_pk and not source_is_pk:
+       if source_column.endswith(f"{target_table}_id"):
+           scores.append(0.2)  # +20% bonus
+   ```
+
+## 🚀 Mejoras Futuras
+
+- [ ] Soporte para más tipos de bases de datos
+- [ ] Detección de relaciones N:M
+- [ ] Embeddings para similitud semántica
+- [ ] Interfaz web
+- [ ] Procesamiento en paralelo
+- [ ] Cache de resultados
+      # Prescription
+        ]
+        self.common_id_patterns.extend(self.medical_patterns)
+```
+
+### Cambiar umbral de confianza
+```python
+# Por defecto es 0.3 (30%)
+candidates = detector.find_relationships()
+
+# Filtrar solo relaciones con alta confianza
+high_confidence = [c for c in candidates if c.confidence_score > 0.7]
+
+# O modificar en el código:
+if candidate and candidate.confidence_score > 0.5:  # Cambiar umbral
+    candidates.append(candidate)
+```
+
+### Cambiar modelo de AI
+```python
+analyze_database_with_ai(tables, ollama_model="codellama:latest")
+```
+
+## 📝 Archivos Generados
+
+- `relationships.json`: Todas las relaciones detectadas con evidencia
+- Logs en consola con detalles del análisis
+
+## 🧪 Testing y Verificación
+
+### Test de No-Confusión de PKs
+Para verificar que el sistema no confunde PKs entre tablas:
+
+```bash
+python test_pk_detection.py
+```
+
+### Test de Nombres Complejos
+Para probar con nombres no estándar:
+
+```bash
+python test_complex_names.py
+```
+
+Output esperado:
+```
+🧪 TEST: Detección con Nombres de Columnas No Estándar
+======================================================================
+
+🔑 Detectando claves primarias...
+  - patients: PatientUID (confianza: 100%)
+  - pets: AnimalIdentifier (confianza: 100%)
+  - appointments: CitaID (confianza: 100%)
+
+✅ ENCONTRADA: pets.OwnerPatientCode → patients.PatientUID
+   Confianza: 96.5%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: appointments.pacienteIdentificador → patients.PatientUID
+   Confianza: 94.0%
+   Coincidencia valores: 80.0%
+
+✅ ENCONTRADA: prescriptions.MedicationCode → medications.MedicationUUID
+   Confianza: 91.5%
+   Coincidencia valores: 75.0%
+
+📈 Resumen: 7/7 relaciones esperadas encontradas
+
+🔤 Análisis de Descomposición de Nombres:
+----------------------------------------------------------------------
+
+'OwnerPatientCode':
+  - Palabras: {'owner', 'patient', 'code'}
+  - Palabras base: {'owner', 'patient'}
+  - Tiene ID: True
+
+'pacienteIdentificador':
+  - Palabras: {'paciente', 'identificador'}
+  - Palabras base: {'paciente'}
+  - Tiene ID: True
+```
+
+## 📝 Ejemplos de Uso con Nombres No Estándar
+
+### Ejemplo 1: Base de datos con nomenclatura mixta
+```python
+tables = {
+    'Customers': pd.DataFrame({
+        'CustomerUID': ['C001', 'C002', 'C003'],
+        'FullName': ['John Doe', 'Jane Smith', 'Bob Johnson']
+    }),
+    'Orders': pd.DataFrame({
+        'OrderIdentifier': ['O1001', 'O1002', 'O1003'],
+        'ClientReference': ['C001', 'C002', 'C001']  # FK a Customers.CustomerUID
+    })
+}
+
+detector = SmartRelationshipDetector(tables)
+candidates = detector.find_relationships()
+
+# Detectará: Orders.ClientReference → Customers.CustomerUID
+```
+
+### Ejemplo 2: Nombres en español/mixtos
+```python
+tables = {
+    'pacientes': pd.DataFrame({
+        'pacienteID': [1, 2, 3],
+        'nombreCompleto': ['Juan', 'María', 'Carlos']
+    }),
+    'citas': pd.DataFrame({
+        'citaNumero': [101, 102, 103],
+        'pacienteIdentificador': [1, 2, 1]  # FK a pacientes.pacienteID
+    })
+}
+
+# El sistema detectará la relación correctamente
+```
+
+### Ejemplo 3: CamelCase y términos técnicos
+```python
+tables = {
+    'SystemUsers': pd.DataFrame({
+        'UserGUID': ['550e8400-e29b-41d4-a716-446655440001', ...],
+        'Username': ['admin', 'user1', 'user2']
+    }),
+    'AuditLogs': pd.DataFrame({
+        'LogEntryID': [1, 2, 3],
+        'PerformedByUserIdentifier': ['550e8400-e29b-41d4-a716-446655440001', ...]
+    })
+}
+
+# Detectará: AuditLogs.PerformedByUserIdentifier → SystemUsers.UserGUID
+```
+
+## ⚠️ Consideraciones
+
+1. **Performance**: El análisis de valores puede ser lento en tablas grandes
+2. **Memoria**: Carga todas las tablas en memoria
+3. **AI**: Requiere Ollama ejecutándose localmente
+4. **Precisión**: Los resultados son sugerencias, siempre revisar manualmente
+
+## 🐛 Solución de Problemas
+
+### "Ollama no está disponible"
+```bash
+# Iniciar Ollama
+ollama serve
+
+# Verificar que esté corriendo
+curl http://localhost:11434/api/tags
+```
+
+### "No se encontraron relaciones"
+- Verificar que las columnas tengan valores coincidentes
+- Ajustar el umbral mínimo de confianza (default: 0.3)
+- Revisar los nombres de columnas
+
+### "Se detectan relaciones incorrectas entre PKs"
+El sistema ya incluye protección contra esto, pero si sucede:
+- Verificar que las PKs se detecten correctamente
+- Revisar el método `_calculate_name_similarity()`
+- Aumentar la penalización para relaciones PK-PK
+
+### Errores de memoria
+- Procesar tablas más pequeñas
+- Usar samples de datos
+- Aumentar la memoria disponible
+
+## 🔧 Cambios Clave para Evitar Confusión de PKs
+
+1. **Detección automática de PKs**: El sistema identifica columnas que son PKs basándose en:
+   - Valores únicos para cada fila
+   - Sin valores nulos
+   - Nombres típicos ('id', 'tabla_id')
+
+2. **Reglas de similitud mejoradas**:
+   ```python
+   # REGLA 1: PKs de diferentes tablas NO se relacionan
+   if source_name == 'id' and target_name == 'id':
+       return 0.0
+   
+   # REGLA 2: Patrón FK clásico obtiene alta puntuación
+   # pets.patient_id → patients.id = 95% confianza
+   ```
+
+3. **Penalización en evaluación**:
+   ```python
+   # Si ambas son PKs, penalización fuerte
+   if source_is_pk and target_is_pk:
+       scores.append(-0.5)  # -50% al score total
+   ```
+
+4. **Bonus para patrones correctos**:
+   ```python
+   # Bonus si detectamos patrón FK → PK correcto
+   if target_is_pk and not source_is_pk:
+       if source_column.endswith(f"{target_table}_id"):
+           scores.append(0.2)  # +20% bonus
+   ```
+
+## 🚀 Mejoras Futuras
+
+- [ ] Soporte para más tipos de bases de datos
+- [ ] Detección de relaciones N:M
+- [ ] Embeddings para similitud semántica
+- [ ] Interfaz web
+- [ ] Procesamiento en paralelo
+- [ ] Cache de resultados

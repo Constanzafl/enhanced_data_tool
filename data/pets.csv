@@ -1,0 +1,17 @@
+pet_id,name,species,age_years,patients_id,weight
+1,Pet_01,Cat,2,1,6.0
+2,Pet_02,Dog,3,2,7.0
+3,Pet_03,Cat,4,3,8.0
+4,Pet_04,Dog,5,3,9.0
+5,Pet_05,Cat,6,5,10.0
+6,Pet_06,Dog,7,7,11.0
+7,Pet_07,Cat,8,7,12.0
+8,Pet_08,Dog,9,8,13.0
+9,Pet_09,Cat,10,10,14.0
+10,Pet_10,Dog,11,10,15.0
+11,Pet_11,Cat,12,12,16.0
+12,Pet_12,Dog,1,15,17.0
+13,Pet_13,Cat,2,15,18.0
+14,Pet_14,Dog,3,18,19.0
+15,Pet_15,Cat,4,20,20.0
+16,Pet_16,Dog,5,20,21.0

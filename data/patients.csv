@@ -1,0 +1,21 @@
+id,name,email,phone,age,city
+1,Patient_01,patient1@email.com,+54900000001,26,Buenos Aires
+2,Patient_02,patient2@email.com,+54900000002,27,Buenos Aires
+3,Patient_03,patient3@email.com,+54900000003,28,Buenos Aires
+4,Patient_04,patient4@email.com,+54900000004,29,Buenos Aires
+5,Patient_05,patient5@email.com,+54900000005,30,Buenos Aires
+6,Patient_06,patient6@email.com,+54900000006,31,Buenos Aires
+7,Patient_07,patient7@email.com,+54900000007,32,Buenos Aires
+8,Patient_08,patient8@email.com,+54900000008,33,Buenos Aires
+9,Patient_09,patient9@email.com,+54900000009,34,Buenos Aires
+10,Patient_10,patient10@email.com,+54900000010,35,Buenos Aires
+11,Patient_11,patient11@email.com,+54900000011,36,Buenos Aires
+12,Patient_12,patient12@email.com,+54900000012,37,Buenos Aires
+13,Patient_13,patient13@email.com,+54900000013,38,Buenos Aires
+14,Patient_14,patient14@email.com,+54900000014,39,Buenos Aires
+15,Patient_15,patient15@email.com,+54900000015,40,Buenos Aires
+16,Patient_16,patient16@email.com,+54900000016,41,Buenos Aires
+17,Patient_17,patient17@email.com,+54900000017,42,Buenos Aires
+18,Patient_18,patient18@email.com,+54900000018,43,Buenos Aires
+19,Patient_19,patient19@email.com,+54900000019,44,Buenos Aires
+20,Patient_20,patient20@email.com,+54900000020,45,Buenos Aires
