@@ -7,8 +7,8 @@ Combina detección inteligente + validación con AI
 import pandas as pd
 import os
 from typing import Dict
-from smart_detector import SmartRelationshipDetector, detect_relationships
-from ai_validator import AIRelationshipValidator, analyze_database_with_ai
+from smartdbdetector import SmartRelationshipDetector, detect_relationships
+from aivalidatorfixed import AIRelationshipValidator, analyze_database_with_ai
 
 def load_sample_data() -> Dict[str, pd.DataFrame]:
     """Carga datos de ejemplo o tus propios CSVs"""

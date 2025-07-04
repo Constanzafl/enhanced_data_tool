@@ -295,7 +295,7 @@ def validate_with_real_ai(detected_relations):
     print_colored("🤖 Validando relaciones con Ollama LLM...", Colors.OKCYAN)
     
     try:
-        from real_ai_verifier import RealAIVerifier
+        from old.real_ai_verifier import RealAIVerifier
         
         # Verificar si AI está disponible
         ai_verifier = RealAIVerifier()

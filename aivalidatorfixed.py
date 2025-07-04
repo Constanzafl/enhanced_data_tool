@@ -255,7 +255,7 @@ def analyze_database_with_ai(tables: Dict[str, pd.DataFrame],
     print("=" * 60)
     
     # Fase 1: Detección inteligente
-    from smart_detector import SmartRelationshipDetector
+    from smartdbdetector import SmartRelationshipDetector
     
     detector = SmartRelationshipDetector(tables)
     candidates = detector.find_relationships()

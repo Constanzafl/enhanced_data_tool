@@ -58,7 +58,7 @@ class EnhancedDataToolPipeline:
         
         try:
             # Importar detector CSV
-            from csv_relationship_detector import CSVRelationshipDetector
+            from old.csv_relationship_detector import CSVRelationshipDetector
             
             # Ejecutar análisis
             detector = CSVRelationshipDetector(str(self.data_directory))
@@ -207,7 +207,7 @@ class EnhancedDataToolPipeline:
         Validación REAL con AI usando Ollama LLM
         """
         try:
-            from real_ai_verifier import RealAIVerifier
+            from old.real_ai_verifier import RealAIVerifier
             
             # Inicializar verificador AI real
             ai_verifier = RealAIVerifier()

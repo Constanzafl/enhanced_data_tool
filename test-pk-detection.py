@@ -5,7 +5,7 @@ pets.id con patients.id, y detecta correctamente pets.patient_id → patients.id
 """
 
 import pandas as pd
-from smart_detector import SmartRelationshipDetector
+from smartdbdetector import SmartRelationshipDetector
 
 def create_test_data():
     """Crea datos de prueba que demuestran el problema"""

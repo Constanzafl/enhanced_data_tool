@@ -383,7 +383,7 @@ def analyze_with_different_methods(db_path: str):
     
     # Importar después de asegurar que los archivos existen
     try:
-        from complete_data_tool import CompleteDataTool
+        from old.complete_data_tool import CompleteDataTool
     except ImportError:
         print_colored("❌ No se puede importar CompleteDataTool", Colors.FAIL)
         print_colored("   Asegúrate de que complete_data_tool.py esté en el mismo directorio", Colors.WARNING)
@@ -508,7 +508,7 @@ def demonstrate_error_fixes():
         })
         
         # Demostrar serialización corregida
-        from complete_data_tool import CompleteDataTool
+        from old.complete_data_tool import CompleteDataTool
         tool = CompleteDataTool("complex_ecommerce.db")
         serialized = tool._serialize_dataframe(df)
         
@@ -541,7 +541,7 @@ def generate_comprehensive_report(db_path: str, results_comparison: dict):
     print_section("GENERANDO REPORTE COMPLETO")
     
     try:
-        from complete_data_tool import CompleteDataTool
+        from old.complete_data_tool import CompleteDataTool
         
         # Usar el mejor método disponible
         use_embeddings = True

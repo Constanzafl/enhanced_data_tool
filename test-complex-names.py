@@ -5,7 +5,7 @@ Prueba del detector con nombres de columnas complejos y no estándar
 
 import pandas as pd
 import numpy as np
-from smart_detector import SmartRelationshipDetector
+from smartdbdetector import SmartRelationshipDetector
 
 def create_complex_test_data():
     """Crea datos de prueba con nombres de columnas no estándar"""

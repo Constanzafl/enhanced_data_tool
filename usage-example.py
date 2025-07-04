@@ -4,8 +4,8 @@ Ejemplo completo de uso del detector inteligente de relaciones
 """
 
 import pandas as pd
-from smart_detector import SmartRelationshipDetector
-from ai_validator import AIRelationshipValidator
+from smartdbdetector import SmartRelationshipDetector
+from aivalidatorfixed import AIRelationshipValidator
 
 # Ejemplo 1: Datos de clínica veterinaria
 def veterinary_clinic_example():

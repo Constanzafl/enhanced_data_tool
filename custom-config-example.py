@@ -4,7 +4,7 @@ Ejemplo de configuración personalizada para diferentes dominios y nomenclaturas
 """
 
 import pandas as pd
-from smart_detector import SmartRelationshipDetector
+from smartdbdetector import SmartRelationshipDetector
 
 class CustomDomainDetector(SmartRelationshipDetector):
     """Detector personalizado para un dominio específico"""
