@@ -59,7 +59,7 @@ class SmartRelationshipDetector:
             'doctor': ['doctor', 'physician', 'provider', 'staff', 'medico'],
             'pet': ['pet', 'animal', 'patient', 'mascota'],
             'owner': ['owner', 'client', 'customer', 'dueño', 'propietario']
-        }
+        } ### revieww
         
     def analyze_columns(self):
         """Analiza todas las columnas y crea perfiles detallados"""
@@ -109,8 +109,8 @@ class SmartRelationshipDetector:
                     # Alta prioridad: columna con nombre de tabla + id
                     elif (col_lower == f"{table_name.lower()}_id" or 
                           col_lower == f"{table_name.lower()}id" or
-                          col_lower == f"{table_name.rstrip('s').lower()}_id" or
-                          col_lower == f"{table_name.rstrip('s').lower()}id"):
+                          col_lower == f"{table_name.rstrip('s').lower()}_id" or  ###review
+                          col_lower == f"{table_name.rstrip('s').lower()}id"):     ###review
                         pk_candidates.insert(0, (column, 95))
                     
                     # Prioridad media-alta: contiene palabras clave de ID
@@ -178,7 +178,7 @@ class SmartRelationshipDetector:
             'date': 0,
             'phone': 0,
             'alphanumeric': 0
-        }
+        }        ####reviewww
         
         for value in data.dropna().astype(str).head(100):
             if re.match(r'^\d+$', value):
