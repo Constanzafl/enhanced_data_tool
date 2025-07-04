@@ -64,7 +64,7 @@ Considera:
 3. ¿El porcentaje de valores coincidentes es significativo?
 4. ¿La relación tiene sentido en el contexto del dominio (médico/veterinario)?
 
-Responde en formato JSON:
+IMPORTANTE: Devuelve un JSON válido, en una sola línea, sin saltos de línea dentro de strings.
 {{
     "es_valida": true/false,
     "confianza_ai": 0-100,
@@ -154,7 +154,9 @@ Responde en formato JSON:
             )
             
             if response.status_code == 200:
-                return response.json()['response']
+                raw= response.json()['response']
+                print(f"\n📥 Respuesta AI cruda:\n{raw}\n")
+                return raw
             else:
                 raise Exception(f"Error HTTP: {response.status_code}")
                 
@@ -173,6 +175,7 @@ Responde en formato JSON:
             
             if json_start >= 0 and json_end > json_start:
                 json_str = response[json_start:json_end]
+                json_str = json_str.replace('\n', ' ').replace('\r', ' ')
                 data = json.loads(json_str)
                 
                 return ValidationResult(
